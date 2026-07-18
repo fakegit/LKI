@@ -11,27 +11,27 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+        python-version: [ '3.12', '3.13', '3.14' ]
         os: [ macos-latest, ubuntu-latest, windows-latest ]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v1
+        uses: actions/checkout@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.2.0
+        with:
+          enable-cache: true
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install requirements
+      - name: Install package
         run: |
-          python -m pip install -U pip pipenv
-          pipenv install --deploy --system
+          uv pip install --system -e ".[dev]"
       - name: Check code style
-        if: matrix.python-version == 3.9
+        if: matrix.python-version == '3.12'
         run: |
-          pipenv sync --system --dev
-          black -l 120 --check .
-      - name: Command Installation
-        run: |
-          python setup.py install
+          ruff check .
+          ruff format --check .
       - name: Config Installation
         if: matrix.os != 'windows-latest'
         run: |
@@ -40,7 +40,6 @@ jobs:
       - name: Config Verification
         if: matrix.os != 'windows-latest'
         run: |
-          source ~/.profile
           git yes
-          lki clone LKI/LKI
-          test -d ~/code/src/github.com/LKI/LKI || exit 1
+          lki clone liriansu-opus/liriansu-opus
+          test -d ~/code/src/github.com/liriansu-opus/liriansu-opus || exit 1

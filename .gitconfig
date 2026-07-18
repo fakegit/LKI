@@ -8,16 +8,15 @@
     cb = checkout -b
     changed = update-index --no-assume-unchanged  # revert op of `git unchanged`
     ci = commit
-    cia = commit --all
-    clone = clone -o o
-    cm = commit --amend --no-edit --all --no-verify
+    cm = commit --amend --no-edit --all
+    cme = commit --amend --edit --all --allow-empty
     co = checkout
     crp = cherry-pick
     d = diff
     dfl = diff --name-status  # diff and list name
     dfs = diff --staged
     dl = diff HEAD^
-    f = fetch o --tags
+    f = fetch origin --tags --prune
     g = grep -in  # ignore case, line number
     hide = update-index --assume-unchanged  # same with `git unchanged`
     last = log -1 HEAD
@@ -25,36 +24,31 @@
     load = stash pop
     logg = log --graph --decorate --oneline --abbrev-commit --all  # VERY VERY useful command
     logo = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative --no-merges
-    logs = log --all --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+    logs = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
     mgf = merge --ff-only
     p = push
     pa = push --all
-    pd = push o -o merge_request.create -o merge_request.target=dev HEAD -f
+    pd = push origin HEAD -f
     pf = push -f
     pl = pull --rebase
-    pm = push o -o merge_request.create -o merge_request.target=master HEAD -f
-    po = push o
+    po = push origin
     ps = push
+    pt = push --tags
+    pua = push -u origin HEAD:alpha-only -f
     pull = pull --rebase
-    pua = push -u o HEAD:alpha-only -f
-    puo = push -u o
-    puod = push -u o -o merge_request.create -o merge_request.target=dev
-    puof = push -u o -o merge_request.create -o merge_request.target=freeze
-    puom = push -u o -o merge_request.create -o merge_request.target=master
+    puo = push -u origin
     puz = push -u z
-    puzd = push -u z -o merge_request.create -o merge_request.target=dev
-    puzm = push -u z -o merge_request.create -o merge_request.target=master
     rb = rebase
     rbc = rebase --continue
     rbi = rebase -i  # if there's only one git command you should learn, it'll be `git rebase`
-    rd = rebase o/HEAD
+    rd = rebase origin/HEAD
+    rdi = rebase origin/HEAD -i
     regret = reset HEAD^  # regret last commit, same with `git ag`
-    rg = reset HEAD^
+    rg = reset HEAD^  # regret
     rh = reset --hard
-    rhd = reset --hard o/HEAD
+    rhd = reset --hard origin/HEAD
     rp = remote prune
-    rpo = remote prune o
-    rroo = remote rename origin o
+    rpo = remote prune origin
     rs = reset
     save = stash
     slog = log --graph --decorate --oneline --all --simplify-by-decoration
@@ -64,8 +58,9 @@
     sv = stash
     unchanged = update-index --assume-unchanged  # assume a file is unchanged, often use to change some local config
     unhide = update-index --no-assume-unchanged  # same with `git changed`
-    wp = commit --all --message 'feat: WIP' --allow-empty --no-verify  # commit with Work In Progress quickly
     wj = commit --all --message 'JIRA-123: WIP' --allow-empty --no-verify  # commit with Jira: Work In Progress quickly
+    wp = commit --all --message 'feat: WIP' --allow-empty --no-verify  # commit with Work In Progress quickly
+    wt = worktree
     yes = log --oneline --since yesterday --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative --no-merges  # see what's new since yesterday
 [core]
     autocrlf = false  # don't mess up crlf
@@ -82,11 +77,18 @@
 [merge]
     tool = vimdiff
 [push]
+    autoSetupRemote = true
     default = simple
 [user]
     name = Lirian Su
     email = liriansu@gmail.com
+    signingkey = D7D3E9BB905FE002
+[commit]
+    gpgsign = true
 [github]
-    user = LKI
-[credential "helperselector"]
-    selected = manager-core
+    user = liriansu-opus
+[safe]
+    directory = C:/Users/lirian/.lki  # Windows
+    directory = /Users/lirian/.lki  # macOS / Unix
+[advice]
+    skippedCherryPicks = false

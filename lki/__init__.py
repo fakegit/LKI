@@ -1,18 +1,6 @@
-import fire
+from importlib.metadata import PackageNotFoundError, version
 
-from lki.error import LKIError
-from lki.fires import LKI
-
-__version__ = "0.4.3"
-__all__ = [
-    "LKI",
-    "LKIError",
-]
-
-
-def entry():
-    fire.Fire(LKI)
-
-
-if __name__ == "__main__":
-    entry()
+try:
+    __version__ = version("lki")
+except PackageNotFoundError:  # running from a raw checkout without an install
+    __version__ = "0.0.0+unknown"

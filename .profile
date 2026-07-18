@@ -1,82 +1,209 @@
+# Shell Style Guide: https://google.github.io/styleguide/shellguide.html
+
 # enable vi mode
 set -o vi
 
-if [[ "${OS}" == "Windows_NT" ]]; then
-  alias ls="/bin/ls --color"
-fi
+# helper functions
+checkCMD () { command -v "$1" > /dev/null 2>&1; }
+checkRun () { checkCMD "$1" && "$@"; }
+path_prepend () {
+  case ":${PATH}:" in
+    *":$1:"*) ;;
+    *) PATH="$1${PATH:+:${PATH}}" ;;
+  esac
+}
+ld_library_path_prepend () {
+  case ":${LD_LIBRARY_PATH:-}:" in
+    *":$1:"*) ;;
+    *) LD_LIBRARY_PATH="$1${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" ;;
+  esac
+}
 
 # general aliases
 alias ..="cd .."
-alias bv="bumpversion"
-alias cnpm="npm --registry=https://registry.npm.taobao.org --cache=${HOME}/.npm/.cache/cnpm --disturl=https://npm.taobao.org/dist --userconfig=${HOME}/.cnpmrc"
+alias bv="uv version --bump"
+alias cbo="cmux browser open"
+alias cc="claude"
+alias cca="claude agents"
+alias ccc="CLAUDE_CODE_USE_VERTEX=1 CLOUD_ML_REGION=global claude"
+alias ccusage="npx -y ccusage@latest"
 alias conf="vim ~/.profile"
-alias dp="env KUBECONFIG='' dapr"
+alias cx="codex --yolo"
+alias cxusage="npx -y @ccusage/codex@latest"
+alias gdate="date"
+alias gi="gemini --yolo"
 alias la="ls -ah"
 alias ll="ls -lh"
-alias ln="lerna"
-alias pt="poetry"
 alias reload="source ~/.profile"
-alias sk="skaffold"
 alias sp="scoop"
 alias st="stern --tail 200 --color=always"
 alias ta="tmux attach"
-alias vi="nvim"
-alias vim="nvim"
+alias tf="terraform"
+alias tsl="tailscale"
+alias vk="HOST=0.0.0.0 PORT=20080 npx -y vibe-kanban@latest"
 alias wea="curl https://wttr.in/"
-alias ws='cd $(lab ws 2>&1) && git fetch'
 alias yn="yarn"
+
+# conditional aliases
+if checkCMD nvim; then
+  alias vi="nvim"
+  alias vim="nvim"
+fi
+if [[ "${OS}" == "Windows_NT" || -z "${OS}" ]]; then
+  alias ls="/bin/ls --color"
+fi
+
+# general functions
 update () {
-  scoop update '*'
-  scoop cleanup '*'
+  checkRun scoop update -a
+  checkRun scoop cleanup -a
+  checkRun scoop cache rm -a
   git -C ~/.vim pull --rebase
   git -C ~/.lki pull --rebase
-  python -m pip install -U pip setuptools wheel lki virtualenv pipenv black
-  go install github.com/oligot/go-mod-upgrade@latest
+  checkRun python -m pip install -U pip setuptools wheel lki virtualenv pipenv pynvim
+  checkRun go install github.com/oligot/go-mod-upgrade@latest
+  checkRun npm i -g npm
+  checkRun brew update
+  checkRun brew upgrade
+}
+ws () {
+  WS=$(find -L ~/code/src -maxdepth 4 -name .git | sed "s/\/.git$//" | sort | fzf --exact --filter "$*" | fzf -1 -0)
+  [ -z "${WS}" ] && return 0
+  cd "${WS}" || return 1
+}
+ggv() {
+  local PATTERN
+  local -a FILES
+  PATTERN="${1}"
+  shift
+  if [[ -z "${PATTERN}" ]]; then
+    return 0
+  fi
+  mapfile -t FILES < <(git grep -- "${PATTERN}" | cut -d':' -f1 | sort -u | fzf -m -1 -0)
+  if (( ${#FILES[@]} > 0 )); then
+    vim -- "${FILES[@]}"
+  fi
 }
 
 # brew aliases
-alias bc="brew cask"
 alias bi="brew install"
-
-# zeus aliases
-alias z="docker exec -i -t zeus zeus"
+alias bic="brew install --cask"
+alias br="brew"
+alias bs="brew search"
 
 # git aliases
 alias frd="git f && git rd"
 alias g="git"
-alias gc="git remote show | xargs -I{} git remote prune {} && git gc"
+gbad() {
+  local selected branch wt status
+
+  status=0
+  selected="$(git branch --list | grep -Ev '^[*+] ' | fzf -m -1 -0)" || return $?
+  if [ -n "${selected}" ]; then
+    while IFS= read -r branch; do
+      branch="${branch#"${branch%%[![:space:]]*}"}"
+      [ -z "${branch}" ] && continue
+      git branch -D "${branch}" || status=1
+    done <<< "${selected}"
+  fi
+
+  while IFS= read -r wt; do
+    [ -z "${wt}" ] && continue
+    if [ -n "$(git -C "${wt}" status --porcelain=v1)" ]; then
+      printf 'gbad: skipping dirty detached worktree: %s\n' "${wt}" >&2
+      status=1
+      continue
+    fi
+    git worktree remove "${wt}" || status=1
+  done < <(git worktree list --porcelain | awk '
+    /^worktree / { path = substr($0, 10) }
+    /^detached$/ { print path }
+  ')
+
+  return "${status}"
+}
+alias gcr="gf && gbr -r | grep -E 'lirian[-/]' | sed 's#origin/##' | awk '{\$1=\$1};1' | fzf | xargs -I{} bash -c 'git checkout {} && git reset --hard origin/{}'"
+alias ghb="gh browse"
+alias ghpc="gpd && gh pr create -f && ghpr"
+alias ghpr="gh pr view -w"
+ghlgtm() { gh pr review "${1}" --approve --body "lgtm"; }
+alias gof="git log --all --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative --color=always | head -n 1000 | fzf --ansi --no-sort --preview 'git show {1} --color=always' --preview-window=:wrap | cut -d' ' -f1"
 alias it="git"
 alias lg="git logg"
 alias lgs="git logs"
 alias qgit="git"
+gwta() { git fetch origin main && mkdir -p ~/code/src/worktrees && git worktree add -b lirian/$1 ~/code/src/worktrees/$1 origin/main; }
+gwtd() {
+  local selected line WT_PATH WT_BRANCH status
+  local -a pids
 
-# ackerr/lab aliases
-alias lb="lab browser"
-alias lc="lab clone"
-alias li="lab ci -r o"
-alias lia="lab ci -b alpha-only -r o"
-alias lo="lab open -r o -p"
+  selected="$(git worktree list --porcelain | awk '
+    /^worktree / { path = substr($0, 10) }
+    /^branch / {
+      branch = substr($0, 8)
+      sub("^refs/heads/", "", branch)
+      if (branch == "main" || branch == "master") next
+      print path "\t" branch
+    }
+  ' | fzf -m -1 -0 --delimiter=$'\t' --with-nth=2,1 --prompt='worktree> ')"
+
+  [ -z "${selected}" ] && return 0
+
+  status=0
+  pids=()
+  while IFS= read -r line; do
+    WT_PATH="${line%%$'\t'*}"
+    WT_BRANCH="${line#*$'\t'}"
+    (
+      git worktree remove "${WT_PATH}" --force && git branch -D "${WT_BRANCH}"
+    ) &
+    pids+=("$!")
+  done <<< "${selected}"
+
+  for pid in "${pids[@]}"; do
+    wait "${pid}" || status=1
+  done
+
+  return "${status}"
+}
+
+# gcloud aliases
+alias gc="gcloud"
+alias gcp="gcloud projects"
+
+# lki aliases
+alias lc="lki clone"
+
+# node aliases
+alias nd="npm run dev"
+alias nr="npm run"
+alias nci="npm clean-install"
+
+# nx aliases
+alias nxd="nx dev"
 
 # go aliases
 alias gmt="go mod tidy"
 alias gfm="go fmt"
 alias gmu="go-mod-upgrade"  # https://github.com/oligot/go-mod-upgrade
 alias gilo="go list -u -m -f '{{if not .Indirect}}{{.}}{{end}}' all"
-gguv() { go get -u -v github.com/$1; }
+gguv() { go get -u -v github.com/"${1}"; }
 
 # python/pip/pipenv aliases
 alias pf="pipenv run fab"
 alias pi="python -m pip"
 alias pii="python -m pip install"
 alias piiu="python -m pip install -U"
-alias pilo="python -m pip install -U pip setuptools wheel black && python -m pip list --outdated"
+alias pilo="python -m pip install -U pip black && python -m pip list --outdated"
 alias pip="python -m pip"
 alias pm="python manage.py"
+alias pmt="python manage.py test"
 alias ppm="pipenv run python manage.py"
 alias pr="pipenv run"
 alias psi="python setup.py install"
 alias pv="pipenv"
-alias pvsd="pipenv sync --dev"
+alias pvs="pipenv shell --fancy"
+alias pvsd="pipenv sync --dev && pipenv clean"
 alias pvud="pipenv update --dev && pipenv clean"
 
 alias jsonify="python -mjson.tool"
@@ -85,13 +212,14 @@ alias jsonify="python -mjson.tool"
 alias m="make"
 alias mb="make build"
 alias mf="make fmt"
+alias ml="make lint"
 alias mm="make migrations"
 alias ms="make ensure"
 alias mt="make test"
 
 # docker aliases from tcnksm/docker-alias
 alias d="docker"
-alias dc="docker-compose"
+alias dc="docker compose"
 alias dex="docker exec -i -t"
 alias di="docker images"
 alias dip="docker inspect --format '{{ .NetworkSettings.IPAddress }}'"
@@ -104,16 +232,14 @@ alias dps="docker ps"
 alias drminone="docker images | grep none | tr -s ' ' | cut -d' ' -f3 | xargs -I{} docker rmi {}"
 alias dspf="docker system prune -f"
 dalias() { alias | grep 'docker' | sed "s/^\([^=]*\)=\(.*\)/\1 => \2/"| sed "s/['|\']//g" | sort; }
-dbash() { docker exec -it $(docker ps -aqf "name=$1") bash; }
-dbu() { docker build -t=$1 .; }
-dkiv() { MSYS_NO_PATHCONV=1 dki -v $(pwd):/app --workdir /app $@; }
-dri() { docker rmi $(docker images -q); }
-drm() { docker rm $1; }
-drmf() { docker stop $1; docker rm $1; }
-dspm() { dsr python -W ignore::RuntimeWarning home/zaihui/server/ygg/manage.py $@; }
-dsr() { dki -v d:/Code/pasta.zaihui.com.cn/zaihui/server:/home/zaihui/server:ro docker-inter.zaihui.com.cn/zaihui/server/base:latest $@; }
-dst() { dspm test --failfast $@; }
-dstop() { docker stop $(docker ps -a -q); }
+dbash() { docker exec -it "$(docker ps -aqf "name=${1}")" bash; }
+dbu() { docker build -t="${1}" .; }
+dkiv() { MSYS_NO_PATHCONV=1 dki -v "$(pwd)":/app --workdir /app "$@"; }
+dri() { docker rmi "$(docker images -q)"; }
+drm() { docker rm "${1}"; }
+drmf() { docker stop "${1}"; docker rm "${1}"; }
+dsh() { docker exec -it "$(docker ps -aqf "name=${1}")" sh; }
+dstop() { docker stop "$(docker ps -a -q)"; }
 
 alias ts="dki soimort/translate-shell"
 alias tz="ts :zh"
@@ -131,43 +257,35 @@ alias kex="kubectl exec -it"
 alias kg="kubectl get"
 alias kga="kubectl get all"
 alias kgns="kubectl get ns"
-alias km="kustomize"
-alias kp="kapp"
-alias kgpa="kubectl get pods -o wide -A"
+alias kgp="kubectl get pods"
+alias kgpa="kubectl get pods -A"
 alias kr="kubectl rollout"
 alias krr="kubectl rollout restart"
 alias krs="kubectl rollout status"
 alias kt="kubectl top"
-kbash() { kex `kpo $1` -- bash; }
-kpm() { kex `kpo $1` -- python manage.py shell; }
-kpo() { kg po | grep $1 | grep Running | head -n1 | cut -d" " -f1; }
-kpy() { kex `kpo $1` -- python; }
-ksh() { kex `kpo $1` -- sh; }
-ktl() { stern --tail 200 --color=always $1 | grep -Ev ' (200|201|202|204|301|302|304) '; }
-kgp() {
-  KEYWORD=${1}
-  if [[ -z "${KEYWORD}" ]]; then
-    kubectl get pods -o wide;
-  else
-    kubectl get pods -o wide | grep ${1};
-  fi
-}
+kbash() { kex "$(kpo "${1}")" -- bash; }
+kpm() { kex "$(kpo "${1}")" -- python manage.py shell; }
+kppm() { kex "$(kpo "${1}")" -- pipenv run python manage.py shell; }
+kpo() { kg po | grep "${1}" | head -n1 | cut -d" " -f1; }
+kpy() { kex "$(kpo "${1}")" -- python; }
+ksh() { kex "$(kpo "${1}")" -- sh; }
+ktl() { stern --tail 200 --color=always "${1}" | grep -Ev ' (200|201|202|204|301|302|304) '; }
 kcl() {
   CONTEXT=${1}
   if [[ -z "${CONTEXT}" ]]; then
-    CURRENT=`kc current-context`
-    CONTEXT=$(kc get-contexts -o=name | fzf --height=20 --preview='kubectl config use-context {} && kubectl get ns' --preview-window=:75%)
+    CURRENT=$(kc current-context)
+    CONTEXT=$(kc get-contexts -o=name | fzf --height=20 --preview='kubectl --context {} get ns' --preview-window=:50%)
     CONTEXT=${CONTEXT:-${CURRENT}}
   fi
-  kubectl config use-context ${CONTEXT} > /dev/null
+  kubectl config use-context "${CONTEXT}" > /dev/null
 }
 kns() {
   NAMESPACE=${1}
   if [[ -z "${NAMESPACE}" ]]; then
     NAMESPACE=$(kg ns -o=name | sed 's/namespace\///' | fzf --height=50% --preview='kubectl get all -n {}' --preview-window=:70%)
   fi
-  if [[ ! -z "${NAMESPACE}" ]]; then
-    kubectl config set-context --current --namespace ${NAMESPACE} > /dev/null
+  if [[ -n "${NAMESPACE}" ]]; then
+    kubectl config set-context --current --namespace "${NAMESPACE}" > /dev/null
   fi
 }
 kl() {
@@ -176,38 +294,126 @@ kl() {
   if [[ -z "${POD}" ]]; then
     POD=$(kg po -o=name | fzf --height=50% --preview='kubectl describe {}' --preview-window=:70%)
   fi
-  if [[ ! -z "${POD}" ]]; then
-    kubectl logs -f ${POD} $@
+  if [[ -n "${POD}" ]]; then
+    kubectl logs -f "${POD}" "$@"
   fi
 }
 
 # --- --- --- #
 
 # set path
-export PIPENV_VERBOSITY=-1
 export BASH_SILENCE_DEPRECATION_WARNING=1
 export EDITOR=vim
-export LANG=en_US.UTF-8
-export PATH=~/.lki/scripts:${PATH}
-export DOCKER_REGISTRY=docker-inter.zaihui.com.cn
-export KUBECONFIG=~/.kube/config
+export KUBE_EDITOR=nvim
+export KUBECONFIG="${HOME}/.kube/config"
+export LANG="en_US.UTF-8"
+ld_library_path_prepend "/usr/lib/wsl/lib"
+path_prepend "${HOME}/.lki/scripts"
+path_prepend "${HOME}/.pyenv/bin"
+path_prepend "${HOME}/.local/bin"
+path_prepend "${HOME}/.temporalio/bin"
+export LD_LIBRARY_PATH
+export PATH
+export PIPENV_VERBOSITY=-1
+export UV_SYSTEM_CERTS=true
 
 # ssh aliases
-alias gethost='cat ~/.ssh/*_config | grep -e "^Host" | grep --color'
-alias gsh='z gsh'
+gethost () {
+  KEYWORD=${1}
+  shift
+  if [[ -z "${KEYWORD}" ]]; then
+    cat ~/.ssh/*config | grep -e "^Host" | cut -c6- | sort "$@";
+  else
+    cat ~/.ssh/*config | grep -e "^Host" | cut -c6- | grep --color "${KEYWORD}" "$@";
+  fi
+}
+csh () {
+  KEYWORD=${1}
+  shift
+  HOST=$(gethost "${KEYWORD}" | fzf -1 -0 | cut -d" " -f1)
+  if [[ -n "${HOST}" ]]; then
+    ssh -t "${HOST}" "$@";
+  fi
+}
 
-# auto aliases  TODO: optimize speed
-mkdir -p ~/.bash_aliases
-python ~/.lki/scripts/git-to-bash.py > ~/.bash_aliases/git_aliases
-source ~/.bash_aliases/*_aliases
+# auto aliases: pre-generated by .githooks/pre-commit
+source ~/.lki/scripts/git_aliases.bash
 
-if command -v starship &> /dev/null;
-then
-  eval "$(starship init bash)"
+## enable oh-my-posh
+if checkCMD oh-my-posh; then
+  eval "$(oh-my-posh init bash --config ~/.lki/.oh-my-posh.json | sed 's|\[\[ -v MC_SID \]\]|[[ -n "$MC_SID" ]]|')"
 fi
 
-if command -v pyenv &> /dev/null;
-then
+## enable direnv
+if checkCMD direnv; then
+  eval "$(direnv hook bash)"
+fi
+
+## enable pyenv
+if checkCMD pyenv; then
   eval "$(pyenv init -)"
 fi
 
+## enable nvm
+if [ -d /opt/homebrew/opt/nvm ]; then
+  export NVM_DIR=/opt/homebrew/opt/nvm
+else
+  export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+fi
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" || true
+
+## auto-switch node version on cd
+_nvm_auto_use() {
+  local nvmrc_path
+  nvmrc_path="$(nvm_find_nvmrc 2>/dev/null)"
+  if [ -n "$nvmrc_path" ]; then
+    local nvmrc_node_version
+    nvmrc_node_version=$(nvm version "$(cat "$nvmrc_path")")
+    if [ "$nvmrc_node_version" = "N/A" ]; then
+      nvm install
+    elif [ "$nvmrc_node_version" != "$(nvm version)" ]; then
+      nvm use
+    fi
+  elif [ -n "$(PWD=$OLDPWD nvm_find_nvmrc 2>/dev/null)" ] && [ "$(nvm version)" != "$(nvm version default)" ]; then
+    nvm use default
+  fi
+}
+if checkCMD nvm; then
+  _nvm_auto_use
+  cd() { builtin cd "$@" && { type _nvm_auto_use >/dev/null 2>&1 && _nvm_auto_use || true; }; }
+fi
+
+# --- WSL2 Proxy Auto Config ---
+if grep -qi microsoft /proc/version 2>/dev/null; then
+  WSL_HOST=$(ip route | awk '/default/ {print $3}')
+  WSL_PROXY_PORT=3067
+  WSL_PROXY_UP=0
+
+  if [[ -n "${WSL_HOST}" ]]; then
+    if checkCMD timeout; then
+      timeout 0.2 bash -c ">/dev/tcp/${WSL_HOST}/${WSL_PROXY_PORT}" 2>/dev/null && WSL_PROXY_UP=1
+    else
+      nc -z -w1 "${WSL_HOST}" "${WSL_PROXY_PORT}" 2>/dev/null && WSL_PROXY_UP=1
+    fi
+  fi
+
+  if [[ "${WSL_PROXY_UP}" -eq 1 ]]; then
+    export HTTP_PROXY="http://${WSL_HOST}:${WSL_PROXY_PORT}"
+    export HTTPS_PROXY="http://${WSL_HOST}:${WSL_PROXY_PORT}"
+    export ALL_PROXY="socks5://${WSL_HOST}:${WSL_PROXY_PORT}"
+    export NO_PROXY=localhost,127.0.0.1
+    export WSL_PROXY_ENABLED=1
+  else
+    unset HTTP_PROXY HTTPS_PROXY ALL_PROXY
+    export WSL_PROXY_ENABLED=0
+  fi
+fi
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+
+[ -f ~/.config/ghnoise/ghnoise.sh ] && source ~/.config/ghnoise/ghnoise.sh  # gh notification de-noiser
+
+# cmux per-workspace CPU monitor: its control socket only accepts processes
+# started inside cmux, so each cmux shell makes sure the monitor is alive.
+if [ -n "${CMUX_WORKSPACE_ID:-}" ] && [ -x "$HOME/.lki/cmux/ensure-cpu-monitor.sh" ]; then
+  "$HOME/.lki/cmux/ensure-cpu-monitor.sh" || true
+fi

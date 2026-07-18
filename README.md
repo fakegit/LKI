@@ -1,108 +1,100 @@
-# Lirian Su(LKI)'s Configuration, 我的配置
+# Lirian Su's Configuration
 
 [![Build Status][badge-build]][github] [![PyPI][badge-pypi]][pypi] [![PyPI][badge-version]][pypi]
 
-[我][me]的[开发环境是 Windows 系统][win-env]，
-但我也时常会在 Unix 系统上游荡。
-因为经常折腾环境，
-所以我专门开了一个项目来同步我的各类配置。
+Hello, [I'm Lirian Su][me]. I work primarily on macOS these days, and frequently on Unix systems too (cloud servers or WSL). Because I set up new environments so often, I keep this project to sync my various configurations across every machine I touch.
+
+This repo happens to share my GitHub username, so GitHub also renders its README as my profile page. If you'd like to know more about me, feel free to read [my introduction][me].
 
 
-## 配置风格
+## Configuration Style
 
-我很懒，
-我的大部分命令都是各种缩写。
-但这些改动都是附加项，
-不会变动原有的任何命令习惯。
+I'm lazy and primarily drive everything through shortcuts and hotkeys. This project defines numerous abbreviations, but the changes are purely additive — they don't alter any existing command habits.
 
-不过 :)
-我的环境里，`python` 是必选项噢。
+For convenient installation, I've written the whole setup process as Python scripts. (So the first thing I do on a new computer is install a Python environment.)
 
 
-## 快速安装
+## Quick Installation
 
-首先，确保环境中有 Python 3.6+，然后使用 `pip` 快速安装：
+First, ensure you have Python 3.12+ in your environment, then install with `pip`:
 
 ```
 pip install lki && lki install
 ```
 
-> 本命令同时支持 Unix, MacOS, Windows 环境
-> 发现有问题就[给我报 Issue][issue]
+> This command supports Unix, macOS, and Windows environments.
+> If you encounter any issues, please [report them as an Issue][issue].
 
 
-## 使用指南
+## macOS Packages
 
-> [~/.gitconfig](/.gitconfig) 中包含了大量的 git alias：
+On a new Mac, after installing [Homebrew](https://brew.sh), restore every tap, formula, and cask from the committed [Brewfile](./Brewfile) with `brew bundle --file ~/.lki/Brewfile`. After installing new packages, refresh the list with `brew bundle dump --file ~/.lki/Brewfile --force`.
+
+
+## Usage Guide
+
+> [~/.gitconfig](./.gitconfig) contains numerous git aliases:
 
 ``` bash
-# 查看 git 配置
+# View git configuration
 $ cat ~/.gitconfig
 
-# git 的基础缩写
+# Basic git abbreviations
 $ git ci  # `git commit`
 $ git br  # `git branch`
 $ git pf  # `git push -f`
 $ git sv  # `git save` <=> `git stash`
 $ git ld  # `git load` <=> `git stash pop`
 
-# git 的常用缩写
+# Common git abbreviations
 $ git cm    # amend last commit
-$ git logg  # log ing graph
+$ git logg  # log in graph
 $ git pd    # push dev with gitlab merge request created
 $ git yes   # show what happened yesterday
 ```
 
-> [~/.profile](/.profile) 中包含了大量的 bash alias：
+> [~/.profile](./.profile) contains numerous bash aliases:
 ``` bash
-# 查看 bash 配置
+# View bash configuration
 $ cat ~/.profile
 
-# 常用缩写
-$ please visudo  # `sudo visudo`
-$ g st  # `git status`
+# Common abbreviations
+$ g st           # `git status`
+$ reload         # re-source ~/.profile after an edit
 $ pv sync --dev  # `pipenv sync --dev`
 
-# 子命令复合缩写
+# Compound subcommand abbreviations
 $ dpa  # `docker ps -a`
 $ kgp  # `kubectl get pods`
 $ gcm  # `git cm`
-$ gsh  # ssh through gate
 
-# 个人向的，你们用不上的缩写
-# 我写这就是给你们看看我平常跑那些命令
-$ svl  # go into my blog repo
-$ dspm test  # run django test for zaihui/server project
-$ stp  # exec bash into k8s cluster
+# fzf-powered helpers that I reach for constantly
+$ ws <keyword>    # jump into a matching repo under ~/code/src
+$ csh <host>      # ssh into a matching host from ~/.ssh/*config
+$ kbash <pod>     # exec bash into a matching k8s pod
 ```
 
-> Vim 的配置，参见另外一个项目 [LKI/dotvim][dotvim]
+> For Vim configuration, see another project [liriansu-opus/dotvim][dotvim]
 
-关于本项目的功能还有很多，
-但是这里的空白太少我写不下了 XD
-
-
-## 开源协议
-
-[宽松的 MIT License][license],
-意味着你可以做任何更改，
-甚至把作者名都改成你。
+There's much more in this project, but the margin here is too small to contain it all. XD
 
 
-## 我有问题要问
+## License
 
-没关系，不论是对项目的问题还是对我个人的问题，
-或者是你觉得哪条命令不够好用，
-都欢迎[来项目里直接提 Issue。][issue]
+[Permissive MIT License][license], meaning you can make any changes — even change the author name to your own.
 
 
-[badge-build]: https://github.com/LKI/LKI/workflows/Build/badge.svg
+## Questions?
+
+No worries — whether it's about the project or about me personally, or if you think a certain command isn't friendly enough, feel free to [submit an Issue directly in the project][issue].
+
+
+[badge-build]: https://github.com/liriansu-opus/liriansu-opus/actions/workflows/build.yml/badge.svg
 [badge-pypi]: https://img.shields.io/pypi/v/lki.svg
-[badge-version]: https://img.shields.io/pypi/pyversions/LKI.svg
-[dotvim]: https://github.com/LKI/dotvim
-[github]: https://github.com/LKI/LKI
-[issue]: https://github.com/LKI/LKI/issues/new
-[license]: https://github.com/LKI/LKI/blob/master/LICENSE
+[badge-version]: https://img.shields.io/pypi/pyversions/lki.svg
+[dotvim]: https://github.com/liriansu-opus/dotvim
+[github]: https://github.com/liriansu-opus/liriansu-opus
+[issue]: https://github.com/liriansu-opus/liriansu-opus/issues/new
+[license]: https://github.com/liriansu-opus/liriansu-opus/blob/HEAD/LICENSE
 [me]: https://www.liriansu.com/about
-[pypi]: https://pypi.python.org/pypi/lki
-[win-env]: https://www.liriansu.com/windows-dev-env
+[pypi]: https://pypi.org/project/lki/

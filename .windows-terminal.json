@@ -1,106 +1,110 @@
 {
-  "$schema": "https://aka.ms/terminal-profiles-schema",
-  "actions": [
+    "$help": "https://aka.ms/terminal-documentation",
+    "$schema": "https://aka.ms/terminal-profiles-schema",
+    "actions": [],
+    "alwaysShowTabs": false,
+    "copyFormatting": "none",
+    "copyOnSelect": true,
+    "defaultProfile": "{51855cb2-8cce-5362-8f54-464b92b32386}",
+    "initialCols": 200,
+    "initialRows": 60,
+    "keybindings": 
+    [
+        {
+            "id": "Terminal.DuplicatePaneDown",
+            "keys": "alt+shift+h"
+        },
+        {
+            "id": "Terminal.DuplicatePaneRight",
+            "keys": "alt+shift+v"
+        }
+    ],
+    "launchMode": "maximized",
+    "multiLinePasteWarning": false,
+    "newTabMenu": 
+    [
+        {
+            "type": "remainingProfiles"
+        }
+    ],
+    "profiles": 
     {
-      "command": {
-        "action": "splitPane",
-        "split": "horizontal",
-        "splitMode": "duplicate"
-      },
-      "keys": "alt+shift+h"
+        "defaults": 
+        {
+            "bellStyle": "none",
+            "closeOnExit": "always",
+            "colorScheme": "Nord",
+            "cursorShape": "filledBox",
+            "font": 
+            {
+                "cellHeight": "1",
+                "face": "CaskaydiaCove Nerd Font",
+                "size": 14,
+                "weight": "light"
+            },
+            "historySize": 9001,
+            "opacity": 75,
+            "padding": "8, 8, 8, 8",
+            "scrollbarState": "hidden",
+            "useAcrylic": true
+        },
+        "list": 
+        [
+            {
+                "commandline": "\"C:\\Users\\lirian\\scoop\\apps\\git\\current\\bin\\bash.exe\" -i -l",
+                "guid": "{ef9560f4-baf0-4587-bd37-fd66c99a03bb}",
+                "historySize": 9001,
+                "icon": "ms-appdata:///roaming/git-bash_32px.ico",
+                "name": "Git Bash",
+                "snapOnInput": true,
+                "startingDirectory": "%USERPROFILE%"
+            },
+            {
+                "commandline": "powershell.exe /nologo",
+                "guid": "{61c54bbd-c2c6-5271-96e7-009a87ff44bf}",
+                "hidden": false,
+                "name": "Powershell"
+            },
+            {
+                "guid": "{0caa0dad-35be-5f56-a8ff-afceeeaa6101}",
+                "hidden": true,
+                "name": "CMD"
+            },
+            {
+                "guid": "{51855cb2-8cce-5362-8f54-464b92b32386}",
+                "hidden": false,
+                "name": "Ubuntu",
+                "source": "CanonicalGroupLimited.Ubuntu_79rhkp1fndgsc"
+            }
+        ]
     },
-    {
-      "command": {
-        "action": "splitPane",
-        "split": "vertical",
-        "splitMode": "duplicate"
-      },
-      "keys": "alt+shift+v"
-    }
-  ],
-  "alwaysShowTabs": false,
-  "copyFormatting": "none",
-  "copyOnSelect": true,
-  "defaultProfile": "{ef9560f4-baf0-4587-bd37-fd66c99a03bb}",
-  "initialCols": 200,
-  "initialRows": 60,
-  "launchMode": "maximized",
-  "multiLinePasteWarning": false,
-  "profiles": {
-    "defaults": {
-      "acrylicOpacity": 0.75,
-      "bellStyle": "none",
-      "closeOnExit": "always",
-      "colorScheme": "Nord",
-      "cursorShape": "filledBox",
-      "font": {
-        "face": "Fira Code",
-        "size": 11,
-        "weight": "light"
-      },
-      "historySize": 9001,
-      "padding": "8, 8, 8, 8",
-      "scrollbarState": "hidden",
-      "useAcrylic": true
-    },
-    "list": [
-      {
-        "commandline": "\"C:\\Users\\lirian\\scoop\\apps\\git\\current\\bin\\bash.exe\" -i -l",
-        "guid": "{ef9560f4-baf0-4587-bd37-fd66c99a03bb}",
-        "historySize": 9001,
-        "icon": "ms-appdata:///roaming/git-bash_32px.ico",
-        "name": "Git Bash",
-        "snapOnInput": true,
-        "startingDirectory": "%USERPROFILE%"
-      },
-      {
-        "commandline": "powershell.exe",
-        "guid": "{61c54bbd-c2c6-5271-96e7-009a87ff44bf}",
-        "hidden": false,
-        "name": "Powershell"
-      },
-      {
-        "commandline": "cmd.exe",
-        "guid": "{0caa0dad-35be-5f56-a8ff-afceeeaa6101}",
-        "hidden": true,
-        "name": "CMD"
-      },
-      {
-        "guid": "{b453ae62-4e3d-5e58-b989-0a998ec441b8}",
-        "hidden": true,
-        "name": "Azure Cloud Shell",
-        "source": "Windows.Terminal.Azure"
-      },
-      {
-        "guid": "{07b52e3e-de2c-5db4-bd2d-ba144ed6c273}",
-        "hidden": false,
-        "name": "Ubuntu-20.04",
-        "source": "Windows.Terminal.Wsl"
-      }
-    ]
-  },
-  "schemes": [
-    {
-      "name": "Nord",
-      "foreground": "#D8DEE9",
-      "background": "#2E3440",
-      "black": "#3B4252",
-      "red": "#BF616A",
-      "green": "#A3BE8C",
-      "yellow": "#EBCB8B",
-      "blue": "#81A1C1",
-      "purple": "#B48EAD",
-      "cyan": "#88C0D0",
-      "white": "#E5E9F0",
-      "brightBlack": "#4C566A",
-      "brightRed": "#BF616A",
-      "brightGreen": "#A3BE8C",
-      "brightYellow": "#EBCB8B",
-      "brightBlue": "#81A1C1",
-      "brightPurple": "#B48EAD",
-      "brightCyan": "#88C0D0",
-      "brightWhite": "#E5E9F0"
-    }
-  ],
-  "wordDelimiters": "\\()\"',;<>~!@#$%^&*|+=[]{}~?\u2502"
+    "schemes": 
+    [
+        {
+            "background": "#2E3440",
+            "black": "#3B4252",
+            "blue": "#81A1C1",
+            "brightBlack": "#4C566A",
+            "brightBlue": "#81A1C1",
+            "brightCyan": "#88C0D0",
+            "brightGreen": "#A3BE8C",
+            "brightPurple": "#B48EAD",
+            "brightRed": "#BF616A",
+            "brightWhite": "#E5E9F0",
+            "brightYellow": "#EBCB8B",
+            "cursorColor": "#FFFFFF",
+            "cyan": "#88C0D0",
+            "foreground": "#D8DEE9",
+            "green": "#A3BE8C",
+            "name": "Nord",
+            "purple": "#B48EAD",
+            "red": "#BF616A",
+            "selectionBackground": "#FFFFFF",
+            "white": "#E5E9F0",
+            "yellow": "#EBCB8B"
+        }
+    ],
+    "themes": [],
+    "windowingBehavior": "useExisting",
+    "wordDelimiters": "\\()\"',;<>~!#$%^&*|+=[]{}~?\u2502"
 }

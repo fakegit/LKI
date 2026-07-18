@@ -1,0 +1,40 @@
+#!/bin/bash
+set -e
+
+pushd ~/.ssh
+SSH_CONFIG_FILE="gcloud_config"
+echo "Sync all gcloud vm into ~/.ssh/${SSH_CONFIG_FILE}"
+
+# Begin with an empty file
+touch "${SSH_CONFIG_FILE}"
+chmod 600 "${SSH_CONFIG_FILE}"
+> "${SSH_CONFIG_FILE}"
+
+# Use gcloud to get the list and parse it
+gcloud compute instances list --filter="status=RUNNING" | while read -r line; do
+
+    # Skip header line
+    if [[ $line == NAME* ]]; then
+        continue
+    fi
+
+    # Extract the necessary fields
+    read -ra fields <<< "$line"
+    name="${fields[0]}"
+    zone="${fields[1]}"
+    ip="${fields[4]}"
+
+    # Check if the name and zone are not empty
+    if [[ -n $name && -n $zone ]]; then
+        # Append the config to the file
+        cat <<EOF >> "${SSH_CONFIG_FILE}"
+Host $name $ip
+    HostName $name.$zone
+    User root
+    ProxyJump gateway
+
+EOF
+    fi
+done
+
+echo "SSH config has been generated in ${SSH_CONFIG_FILE}"
